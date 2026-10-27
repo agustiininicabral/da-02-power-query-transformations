@@ -1,6 +1,6 @@
 let
     // Replace this path with the absolute path to this repository's raw CSV.
-    SalesFilePath = "C:\\REPLACE\\PATH\\TO\\02-data\\raw\\sales.csv",
+    SalesFilePath = "C:\REPLACE\PATH\TO\02-data\raw\sales.csv",
     Source = Csv.Document(
         File.Contents(SalesFilePath),
         [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]
