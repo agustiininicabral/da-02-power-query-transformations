@@ -27,20 +27,22 @@ Los importes son unidades monetarias sintéticas.
 3. Convertir fechas y números con `try ... otherwise null`, para que los errores puedan clasificarse.
 4. Calcular `expected_net_revenue` y comprobar la coherencia del campo original.
 5. Añadir `quality_status` con reglas de campos obligatorios, cantidades, descuentos e importes.
-6. Separar filas válidas y excepciones en queries diferentes para que los errores sean visibles.
+6. Detectar IDs duplicados de pedidos y productos antes de aceptar filas.
+7. Separar filas válidas y excepciones en queries diferentes para que los errores sean visibles.
 
 ## Insights
 
 1. Infantil registra el mayor ingreso (105.711,81; 17,36%), seguida por OTC (104.438,16; 17,16%) y Perfumería (103.784,47; 17,05%). Las tres representan aproximadamente 51,56% del ingreso.
 2. Paid Social registra 95.217,15, apenas por encima de Email con 94.856,04. La diferencia es pequeña y no demuestra mayor rentabilidad.
 3. El margen estimado global es 40,20%. No incluye gastos operativos ni de adquisición.
-4. El dataset publicado pasa las reglas básicas: 3.500 ventas y 500 productos, sin celdas vacías, IDs duplicados, cantidades no positivas, descuentos fuera de rango ni errores en la fórmula de ingresos netos.
+4. El dataset publicado pasa las reglas básicas: 3.500 ventas y 500 productos, sin celdas vacías, IDs duplicados, fechas inválidas, importes negativos, cantidades no positivas, descuentos fuera de rango ni errores en la fórmula de ingresos netos.
 
 ## Recomendaciones
 
 - Cargar las excepciones en una tabla de revisión para resolverlas antes de publicar el modelo.
 - Agregar `product_id` a ventas para poder hacer relaciones a nivel de producto.
 - Mantener los pasos M versionados y validar recuentos antes/después de cada actualización.
+- Revisar las filas de excepción antes de cargar el modelo; no asumir que un refresh correcto implica datos correctos.
 - Usar medidas separadas para ingresos, costo y margen; no interpretar el margen bruto como beneficio neto.
 
 ## Limitaciones
