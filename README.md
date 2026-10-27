@@ -26,7 +26,7 @@ Proyecto de portfolio de Data Analytics centrado en limpieza reproducible con Po
 - Clasificación de filas por campos requeridos, cantidad, precios, descuentos y coherencia de ingresos.
 - Separación de filas válidas y excepciones sin modificar los CSV originales.
 
-El dataset actual debe producir 3.500 ventas válidas y 500 productos válidos, sin filas de excepción. Si el origen cambia, las consultas de excepciones permiten inspeccionar los problemas en lugar de ocultarlos.
+El dataset actual debe producir 3.500 ventas válidas y 500 productos válidos, sin filas de excepción. Si el origen cambia, las consultas de excepciones permiten inspeccionar los problemas en lugar de ocultarlos. GitHub Actions valida los CSV y las referencias estáticas entre queries, pero no ejecuta Power Query M; la actualización real debe verificarse en Excel o Power BI Desktop.
 
 ## Reglas principales
 
