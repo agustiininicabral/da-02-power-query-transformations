@@ -59,7 +59,11 @@ def validate_project(root: Path = ROOT) -> dict[str, Any]:
         errors.append(f"Products CSV missing required column: {missing}")
 
     if SALES_HEADERS.issubset(sales_headers):
-        if any(not (row.get(field) or "").strip() for row in sales for field in SALES_HEADERS):
+        if any(
+            not (row.get(field) or "").strip()
+            for row in sales
+            for field in SALES_HEADERS
+        ):
             errors.append("Sales CSV contains blank required values")
         order_ids = [row["order_id"] for row in sales]
         if len(order_ids) != len(set(order_ids)):
@@ -85,14 +89,21 @@ def validate_project(root: Path = ROOT) -> dict[str, Any]:
                 errors.append(f"Sales row {row_number} quantity must be positive")
             if not 0 <= discount_rate <= 0.20:
                 errors.append(f"Sales row {row_number} discount outside 0..0.20")
-            if abs(net_revenue - round(quantity * unit_price * (1 - discount_rate), 2)) > 0.011:
+            if (
+                abs(net_revenue - round(quantity * unit_price * (1 - discount_rate), 2))
+                > 0.011
+            ):
                 errors.append(f"Sales row {row_number} has inconsistent net_revenue")
 
     if PRODUCT_HEADERS.issubset(product_headers):
         product_ids = [row["product_id"] for row in products]
         if len(product_ids) != len(set(product_ids)):
             errors.append("Products CSV contains duplicate product_id values")
-        if any(not (row.get(field) or "").strip() for row in products for field in PRODUCT_HEADERS):
+        if any(
+            not (row.get(field) or "").strip()
+            for row in products
+            for field in PRODUCT_HEADERS
+        ):
             errors.append("Products CSV contains blank required values")
         if any(row["active"].strip().lower() not in {"yes", "no"} for row in products):
             errors.append("Products CSV has active values other than Yes/No")
