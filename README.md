@@ -23,19 +23,20 @@ Proyecto de portfolio de Data Analytics centrado en limpieza reproducible con Po
 - Limpieza de espacios en columnas de texto y normalización de Yes/No.
 - Conversión tolerante de fechas y valores numéricos; los errores se convierten en null para poder clasificarlos.
 - Recalculo de ingresos netos esperados y comparación con `net_revenue`.
-- Clasificación de filas por campos requeridos, cantidad, precios, descuentos y coherencia de ingresos.
+- Clasificación de filas por campos requeridos, IDs duplicados, fechas, cantidades, importes no negativos, descuentos y coherencia de ingresos.
 - Separación de filas válidas y excepciones sin modificar los CSV originales.
 
 El dataset actual debe producir 3.500 ventas válidas y 500 productos válidos, sin filas de excepción. Si el origen cambia, las consultas de excepciones permiten inspeccionar los problemas en lugar de ocultarlos. GitHub Actions valida los CSV y las referencias estáticas entre queries, pero no ejecuta Power Query M; la actualización real debe verificarse en Excel o Power BI Desktop.
 
 ## Reglas principales
 
-- `order_id` y `customer_id` no pueden estar vacíos.
-- Fecha válida y cantidad mayor que cero.
+- Todos los campos obligatorios deben estar presentes.
+- `order_id` y `product_id` deben ser únicos.
+- Fecha ISO válida y cantidad mayor que cero.
 - Precio, costo e ingreso neto no negativos.
 - Descuento entre 0 y 20%.
 - `net_revenue` debe coincidir con cantidad × precio unitario × (1 − descuento), con tolerancia de 0,01.
-- El catálogo requiere ID, nombre, categoría, marca y estado Yes/No.
+- El catálogo requiere ID, nombre, categoría, marca y estado Yes/No; las categorías de ventas deben existir en el catálogo.
 
 ## Resultados
 

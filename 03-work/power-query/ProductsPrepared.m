@@ -16,9 +16,26 @@ let
             {"active", each if _ = null then null else Text.Proper(Text.Trim(Text.From(_))), type nullable text}
         }
     ),
+    GroupedProductIds = Table.Group(
+        TrimmedText,
+        {"product_id"},
+        {{"product_count", each Table.RowCount(_), Int64.Type}}
+    ),
+    DuplicateProductIds = Table.SelectRows(GroupedProductIds, each [product_count] > 1),
+    MergedDuplicateProducts = Table.NestedJoin(
+        TrimmedText, {"product_id"}, DuplicateProductIds, {"product_id"},
+        "duplicate_product", JoinKind.LeftOuter
+    ),
+    AddedDuplicateFlag = Table.AddColumn(
+        MergedDuplicateProducts,
+        "is_duplicate_product_id",
+        each Table.RowCount([duplicate_product]) > 0,
+        type logical
+    ),
+    RemovedDuplicateDetails = Table.RemoveColumns(AddedDuplicateFlag, {"duplicate_product"}),
     RequiredFields = {"product_id", "product_name", "category", "brand", "active"},
     AddedQualityStatus = Table.AddColumn(
-        TrimmedText,
+        RemovedDuplicateDetails,
         "quality_status",
         each
             let
@@ -33,6 +50,7 @@ let
                 )
             in
                 if missing then "Missing required fields"
+                else if [is_duplicate_product_id] then "Duplicate product_id"
                 else if not List.Contains({"Yes", "No"}, [active]) then "active must be Yes or No"
                 else "OK",
         type text

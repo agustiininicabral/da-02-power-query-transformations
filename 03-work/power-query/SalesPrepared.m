@@ -45,12 +45,30 @@ let
              and Number.Abs([net_revenue] - [expected_net_revenue]) <= 0.01,
         type logical
     ),
+    GroupedOrderIds = Table.Group(
+        AddedRevenueCheck,
+        {"order_id"},
+        {{"order_count", each Table.RowCount(_), Int64.Type}}
+    ),
+    DuplicateOrderIds = Table.SelectRows(GroupedOrderIds, each [order_count] > 1),
+    MergedDuplicateOrders = Table.NestedJoin(
+        AddedRevenueCheck, {"order_id"}, DuplicateOrderIds, {"order_id"},
+        "duplicate_order", JoinKind.LeftOuter
+    ),
+    AddedDuplicateFlag = Table.AddColumn(
+        MergedDuplicateOrders,
+        "is_duplicate_order_id",
+        each Table.RowCount([duplicate_order]) > 0,
+        type logical
+    ),
+    RemovedDuplicateDetails = Table.RemoveColumns(AddedDuplicateFlag, {"duplicate_order"}),
     RequiredFields = {
         "order_id", "customer_id", "order_date", "category", "channel",
-        "quantity", "unit_price", "discount_rate", "net_revenue", "cost"
+        "country", "city", "quantity", "unit_price", "discount_rate",
+        "net_revenue", "cost", "payment_method", "device"
     },
     AddedQualityStatus = Table.AddColumn(
-        AddedRevenueCheck,
+        RemovedDuplicateDetails,
         "quality_status",
         each
             let
@@ -65,6 +83,7 @@ let
                 )
             in
                 if missing then "Missing required fields"
+                else if [is_duplicate_order_id] then "Duplicate order_id"
                 else if [quantity] <= 0 then "Quantity must be positive"
                 else if [unit_price] < 0 or [cost] < 0 or [net_revenue] < 0 then "Negative amount"
                 else if [discount_rate] < 0 or [discount_rate] > 0.20 then "Discount outside 0-20%"
