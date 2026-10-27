@@ -20,4 +20,4 @@ Los nombres de consulta son importantes porque las queries derivadas usan esas r
 
 ## Por qué se conservan excepciones
 
-La query preparada añade un estado de calidad en vez de borrar silenciosamente filas. Las queries `Valid` y `Exceptions` permiten cargar solo los registros aceptados sin perder la evidencia necesaria para investigar un problema.
+La query preparada añade un estado de calidad en vez de borrar silenciosamente filas. Las queries `Valid` y `Exceptions` permiten cargar solo los registros aceptados sin perder la evidencia necesaria para investigar un problema. Los IDs duplicados se marcan explícitamente antes de dividir las filas.
