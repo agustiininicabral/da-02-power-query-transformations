@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import math
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,12 @@ M_QUERY_DEPENDENCIES = {
     "ProductsValid.m": ("ProductsPrepared",),
     "ProductsExceptions.m": ("ProductsPrepared",),
 }
+M_QUERY_RULES = {
+    "SalesPrepared.m": ("DuplicateOrderIds", "is_duplicate_order_id", "quality_status"),
+    "ProductsPrepared.m": ("DuplicateProductIds", "is_duplicate_product_id", "quality_status"),
+    "SalesValid.m": ("is_duplicate_order_id",),
+    "ProductsValid.m": ("is_duplicate_product_id",),
+}
 
 
 def _read_csv(path: Path) -> tuple[list[dict[str, str]], list[str]]:
@@ -41,17 +48,21 @@ def _read_csv(path: Path) -> tuple[list[dict[str, str]], list[str]]:
         return list(reader), [field.strip() for field in reader.fieldnames]
 
 
-def validate_project(root: Path = ROOT) -> dict[str, Any]:
+def validate_project(
+    root: Path = ROOT,
+    expected_sales_rows: int = 3500,
+    expected_product_rows: int = 500,
+) -> dict[str, Any]:
     errors: list[str] = []
     sales_path = root / "02-data" / "raw" / "sales.csv"
     products_path = root / "02-data" / "raw" / "products.csv"
     sales, sales_headers = _read_csv(sales_path)
     products, product_headers = _read_csv(products_path)
 
-    if len(sales) != 3500:
-        errors.append(f"Expected 3500 sales rows, found {len(sales)}")
-    if len(products) != 500:
-        errors.append(f"Expected 500 product rows, found {len(products)}")
+    if len(sales) != expected_sales_rows:
+        errors.append(f"Expected {expected_sales_rows} sales rows, found {len(sales)}")
+    if len(products) != expected_product_rows:
+        errors.append(f"Expected {expected_product_rows} product rows, found {len(products)}")
     for missing in sorted(SALES_HEADERS - set(sales_headers)):
         errors.append(f"Sales CSV missing required column: {missing}")
     for missing in sorted(PRODUCT_HEADERS - set(product_headers)):
@@ -70,6 +81,11 @@ def validate_project(root: Path = ROOT) -> dict[str, Any]:
 
         for row_number, row in enumerate(sales, start=2):
             try:
+                date.fromisoformat(row["order_date"])
+            except (TypeError, ValueError):
+                errors.append(f"Sales row {row_number} has invalid order_date")
+                continue
+            try:
                 quantity = int(row["quantity"])
                 unit_price = float(row["unit_price"])
                 discount_rate = float(row["discount_rate"])
@@ -86,6 +102,8 @@ def validate_project(root: Path = ROOT) -> dict[str, Any]:
                 continue
             if quantity <= 0:
                 errors.append(f"Sales row {row_number} quantity must be positive")
+            if unit_price < 0 or net_revenue < 0 or cost < 0:
+                errors.append(f"Sales row {row_number} has a negative amount")
             if not 0 <= discount_rate <= 0.20:
                 errors.append(f"Sales row {row_number} discount outside 0..0.20")
             if (
@@ -106,6 +124,15 @@ def validate_project(root: Path = ROOT) -> dict[str, Any]:
             errors.append("Products CSV contains blank required values")
         if any(row["active"].strip().lower() not in {"yes", "no"} for row in products):
             errors.append("Products CSV has active values other than Yes/No")
+        if SALES_HEADERS.issubset(sales_headers):
+            sales_categories = {row["category"] for row in sales}
+            product_categories = {row["category"] for row in products}
+            missing_categories = sorted(sales_categories - product_categories)
+            if missing_categories:
+                errors.append(
+                    "Sales categories missing from product catalog: "
+                    + ", ".join(missing_categories)
+                )
 
     for filename, dependencies in M_QUERY_DEPENDENCIES.items():
         path = root / "03-work" / "power-query" / filename
@@ -118,6 +145,9 @@ def validate_project(root: Path = ROOT) -> dict[str, Any]:
         for dependency in dependencies:
             if dependency not in content:
                 errors.append(f"{filename} must reference query {dependency}")
+        for required_rule in M_QUERY_RULES.get(filename, ()):
+            if required_rule not in content:
+                errors.append(f"{filename} missing required rule: {required_rule}")
     sales_prepared = (root / "03-work" / "power-query" / "SalesPrepared.m").read_text(
         encoding="utf-8"
     )
