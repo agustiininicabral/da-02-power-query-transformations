@@ -27,7 +27,7 @@ def test_all_expected_m_queries_have_declared_dependencies() -> None:
     for filename, dependencies in M_QUERY_DEPENDENCIES.items():
         content = (query_dir / filename).read_text(encoding="utf-8")
         assert content.lstrip().startswith("let")
-        assert "\\nin" in content
+        assert "\nin" in content
         for dependency in dependencies:
             assert dependency in content
 
