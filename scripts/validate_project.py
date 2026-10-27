@@ -34,7 +34,11 @@ M_QUERY_DEPENDENCIES = {
 }
 M_QUERY_RULES = {
     "SalesPrepared.m": ("DuplicateOrderIds", "is_duplicate_order_id", "quality_status"),
-    "ProductsPrepared.m": ("DuplicateProductIds", "is_duplicate_product_id", "quality_status"),
+    "ProductsPrepared.m": (
+        "DuplicateProductIds",
+        "is_duplicate_product_id",
+        "quality_status",
+    ),
     "SalesValid.m": ("is_duplicate_order_id",),
     "ProductsValid.m": ("is_duplicate_product_id",),
 }
@@ -62,7 +66,9 @@ def validate_project(
     if len(sales) != expected_sales_rows:
         errors.append(f"Expected {expected_sales_rows} sales rows, found {len(sales)}")
     if len(products) != expected_product_rows:
-        errors.append(f"Expected {expected_product_rows} product rows, found {len(products)}")
+        errors.append(
+            f"Expected {expected_product_rows} product rows, found {len(products)}"
+        )
     for missing in sorted(SALES_HEADERS - set(sales_headers)):
         errors.append(f"Sales CSV missing required column: {missing}")
     for missing in sorted(PRODUCT_HEADERS - set(product_headers)):
